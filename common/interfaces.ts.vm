@@ -88,7 +88,7 @@ export interface LoginInfo {
     loggedDate: string,
     token: string,
     node_env: string,
-    config: ${user.tablename}ConfigDTO  | undefined
+    config: any
 }
 
 

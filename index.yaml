@@ -5,7 +5,6 @@ scope:
         "main.ts"                      : "webapi/main.ts.vm"
         "tsconfig.json"                : "webapi/tsconfig.json.vm"
         "webapi.ts"                    : "webapi/webapi.ts.vm"
-        "auth.ts"                      : "webapi/auth.ts.vm"
         "interfaces.ts"                : "common/interfaces.ts.vm"
     rest-client:
         "main.ts"                      : "restClient/main.ts.vm"
