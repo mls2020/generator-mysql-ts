@@ -4,9 +4,9 @@ import * as parser from 'body-parser';
 import * as crypto from 'crypto';
 import { Client } from './db';
 import {LoginInfo} from './interfaces';
-import {${user.tablename}ConfigDTO} from './interfaces';
+import {UserConfigDTO} from './interfaces';
 
-interface ${user.tablename} {
+interface User {
     id: number,
     username: string,
     email: string,
@@ -59,7 +59,7 @@ const createUser = (username: string, pwd: string, email: string, db: Client) =>
 }
 
 const listUsers = (db: Client) => {
-    const sql = 'select * from ' + USERTBL ';
+    const sql = 'select * from ' + USERTBL;
     return db.execSQL<any>(sql, []).then(res => {
         return res.data.map(u=>{
             return {
@@ -104,27 +104,6 @@ export const authParser = (req: express.Request, res: express.Response, next) =>
 };
 
 export const applyLogin = (app: express.Application, db: Client, authHandler?: AuthHandler, verifySSO?:VerifyFn) => {
-    app.get('/api/v${major}/login', (req, res) => {
-     const { user, password } = req.query as any;
-        const token = crypt((new Date()).toUTCString());
-        getUser(user, password, db).then(usr => {
-            if (usr) {
-                sessions[token] = {
-                    id: usr.id,
-                    username: usr.username,
-                    loggedDate: (new Date()).toUTCString(),
-                    config: usr.config && JSON.parse(usr.config),
-                    token,
-                    node_env: process.env.NODE_ENV
-                }
-                res.send(sessions[token]);
-            } else {
-                res.status(401).send('Invalid User or Password');
-            }
-        }).catch(err => {
-            res.status(551).send(err);
-        });
-    });
 
     const getUserFromSSO = async (req: any) => {
         const { email, token } = req.query as any;
@@ -138,7 +117,7 @@ export const applyLogin = (app: express.Application, db: Client, authHandler?: A
         };
     }
 
-    app.get('/api/v1/login-sso', async (req, res) => {
+    app.get('/api/v${major}/login-sso', async (req, res) => {
         try {
             const usr = await getUserFromSSO(req);
             if (usr) {
@@ -164,6 +143,13 @@ export const applyLogin = (app: express.Application, db: Client, authHandler?: A
             .then(data => res.send('ok'))
             .catch(err => res.status(554).send(err));
     })
+
+    app.post('/api/v${major}/users', (req, res) => {
+        db.listUsers()
+            .then(res.send)
+            .catch(err => res.status(552).send(err));
+    })
+
 
     app.post('/api/v${major}/sys/createuser', (req, res) => {
         const { username, email, password } = req.body;
