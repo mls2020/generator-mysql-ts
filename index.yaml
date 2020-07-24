@@ -2,7 +2,7 @@ scope:
     webapi:
         "package.json"                 : "db-mysql/package.json.vm"
         "db.ts"                        : "db-mysql/db.ts.vm"
-        "main.ts.vm"                   : "webapi/main.ts.vm"
+        "main.ts"                      : "webapi/main.ts.vm"
         "tsconfig.json"                : "webapi/tsconfig.json.vm"
         "webapi.ts"                    : "webapi/webapi.ts.vm`"
         "auth.ts"                      : "webapi/auth.ts.vm"
