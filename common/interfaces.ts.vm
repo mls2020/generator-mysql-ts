@@ -82,13 +82,5 @@ export interface Result<T> {
     args: any
 }
 
-export interface LoginInfo {
-    id: number,
-    username: string,
-    loggedDate: string,
-    token: string,
-    node_env: string,
-    config: any
-}
 
 

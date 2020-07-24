@@ -21,5 +21,3 @@ scope:
         "src/actions/common.ts"        : "reduxClient/src/actions/common.ts.vm"
         "src/actions/api.ts"           : "reduxClient/src/actions/api.ts.vm"
         "src/actions/index.ts"         : "reduxClient/src/actions/index.ts.vm"
-        "src/reducers/common.ts"       : "reduxClient/src/reducers/common.ts.vm"
-                
