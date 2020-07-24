@@ -1,0 +1,25 @@
+{
+  "name": "${name}-rest-client",
+  "version": "${version}",
+  "description": "${name} rest client",
+  "main": "build/main.js",
+  "files":[
+    "build"
+  ],
+  "typings": "build/main.d.ts",
+  "scripts": {
+    "start": "tsc && node build/main.js",
+    "demo": "tsc && node build/demo.js",
+    "build": "tsc",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+  },
+  "devDependencies": {
+    "isomorphic-fetch": "^2.2.1"
+  }
+
+}

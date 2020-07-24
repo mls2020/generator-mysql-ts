@@ -1,0 +1,116 @@
+// ${name} v${version}
+// tslint:disable
+
+
+import * as I from './interfaces';
+import 'isomorphic-fetch';
+export {I as interfaces};
+
+let query = (params:any)=> Object.keys(params)
+            .map(k => encodeURIComponent(k) + '=' + encodeURIComponent(params[k]))
+            .join('&');
+
+export class RestClient {
+    private rootUrl:string;
+    private token:string = '';
+    constructor(rootUrl:string) {
+        this.rootUrl = rootUrl || '';
+    }
+
+    private fetch<T>(verb:'GET'|'PUT'|'POST'|'DELETE',url: string, qs: any | undefined, body: any| undefined) {
+        return new Promise<T>((resolve, reject) => {
+            const queryString = qs ? query(qs) : ''
+            return fetch(this.rootUrl + '/api/v${major}' + url + '?' + queryString, {
+                method: verb,
+                body: body && JSON.stringify(body),
+                headers: {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json',
+                    'token': this.token
+                } as any
+            }).then(res => {
+                if (res.status >= 300) {
+                    return res.json().then(reject);
+                } else {
+                    return res.json().then(resolve);
+                }
+            }).catch(err => {
+                reject(err);
+            });
+        });
+    }
+
+    public preformGet<T>(url:string, qs:any) {
+        return this.fetch<T>('GET',url,qs,undefined);
+    }
+    public performPost<T>(url:string, data:any) {
+        return this.fetch<T>('POST',url, undefined,data);
+    }
+
+    public setToken = (token:string) => this.token=token;
+
+    login = (args: { user: string, password: string }) => {
+        return this.fetch<I.LoginInfo>(
+            'GET', '/login', args, undefined
+        ).then (res=>{
+            if ( res.token) {
+                this.token = res.token;                
+            }
+            return res;
+        });
+    }
+    loginSSO = (args: { email: string,token:string }) => {
+        return this.fetch<I.LoginInfo>(
+            'GET', '/login-sso', args, undefined
+        ).then (res=>{
+            if ( res.token) {
+                this.token = res.token;                
+            }
+            return res;
+        });
+    }
+
+#foreach($table in $tables)
+//Table $table.name
+    ${table.name}List = (filter?:I.${table.name}Filter) => {
+        return this.fetch<I.Result<I.${table.name}DTO[]>> (
+            'GET', '/${table.name}', filter, undefined 
+        );
+    }
+    ${table.name}Get = (${table.keyName}: ${table.keyType}) => {
+        return this.fetch<I.Result<I.${table.name}DTO>> (
+            'GET', `/${table.name}/${${table.keyName}}`, undefined, undefined 
+        );
+    }
+    ${table.name}Insert = (${table.name}: Partial<I.${table.name}DTO>) => {
+        return this.fetch<I.Result<I.${table.name}DTO>> (
+            'POST', `/${table.name}`, undefined, ${table.name} 
+        );
+    }
+    ${table.name}Update = (${table.name}: Partial<I.${table.name}DTO>) => {
+        return this.fetch<I.Result<I.${table.name}DTO>> (
+            'PUT', `/${table.name}/${${table.name}.${table.keyName}}`, undefined, ${table.name} 
+        );
+    }
+    ${table.name}Delete = (${table.keyName}: ${table.keyType}) => {
+        return this.fetch<I.Result<I.MySQLResult>> (
+            'DELETE', `/${table.name}/${${table.keyName}}`, undefined, undefined 
+        );
+    }
+
+#end
+#foreach($proc in $procedures)
+    action_${proc.name} = (filter:I.${proc.name}Parms) => {
+        return this.fetch<I.Result<I.${proc.name}DTO[]>> (
+            'POST', '/action/${proc.name}',  undefined, filter 
+        );
+    }
+#end
+
+configUser = (config: I.${user.tablename}ConfigDTO  | undefined) => {
+    return this.fetch<I.Result<I.MySQLResult>> (
+        'PUT', `/sys/configuser`, undefined, config 
+    );
+}
+
+}

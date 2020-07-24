@@ -1,0 +1,5 @@
+import { createAction, CreateAction} from 'redux-helper';
+export const startLoading: CreateAction<string> = createAction<string>('START_LOADING');
+export const endLoading = createAction<void>('END_LOADING');
+export const showError = createAction<string>('SHOW_ERROR');
+export const dismissError = createAction<void>('DISMISS_ERROR');

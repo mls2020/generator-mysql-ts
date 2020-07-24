@@ -1,0 +1,18 @@
+{
+    "compilerOptions": {
+        "module": "commonjs",
+        "target": "es5",
+        "sourceMap": true,
+        "outDir": "build",
+        "declaration": true,
+        "types": [
+        ],
+        "lib": [
+            "es6"
+        ]
+    },
+
+    "files": [
+        "main.ts"
+    ]
+}

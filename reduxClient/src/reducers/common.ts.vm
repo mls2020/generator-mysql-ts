@@ -1,0 +1,42 @@
+import * as actions from '../actions';
+import { interfaces as model } from '../restClient/main';
+
+export interface Model {
+    info: model.LoginInfo | null;
+    error: string | null;
+    autologin_next: boolean;
+    spinner:boolean;
+};
+
+const defaultState: Model = {
+    info:null,
+    autologin_next: true,
+    error: null,
+    spinner: false
+};
+
+const reducer = (state: Model = defaultState, action: any): Model => {
+    if (actions.loginSuccess.matchAction(action)) {
+        return { ...state, info: action.payload,autologin_next:false};
+    } else if (actions.logout.matchAction(action)) {
+        return { ...state, info: null};
+    } else if (actions.showError.matchAction(action)) {
+        return { ...state, error: action.payload };
+    } else if (actions.loginFailure.matchAction(action)) {
+        return { ...state, error: 'Session Expired',autologin_next:false };
+    } else if (actions.dismissError.matchAction(action)) {
+        return { ...state, error: null };
+    } else if (actions.startLoading.matchAction(action)) {
+        return { ...state, spinner: true };
+    } else if (actions.endLoading.matchAction(action)) {
+        return { ...state, spinner: false };
+    }
+    return state;
+};
+
+export default reducer;
+
+export const getInfo= (state: Model) => state.info;
+export const getAutologin_next = (state: Model) => state.autologin_next;
+export const getError = (state: Model) => state.error;
+export const getSpinner = (state: Model) => state.spinner;

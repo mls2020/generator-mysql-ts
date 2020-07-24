@@ -1,0 +1,26 @@
+scope:
+    webapi:
+        "package.json"                 : "db-mysql/package.json.vm"
+        "db.ts"                        : "db-mysql/db.ts.vm"
+        "main.ts.vm"                   : "webapi/main.ts.vm"
+        "tsconfig.json"                : "webapi/tsconfig.json.vm"
+        "webapi.ts"                    : "webapi/webapi.ts.vm`"
+        "auth.ts"                      : "webapi/auth.ts.vm"
+        "interfaces.ts"                : "common/interfaces.ts.vm"
+    rest-client:
+        "main.ts"                      : "restClient/main.ts.vm"
+        "package.json"                 : "restClient/package.json.vm"
+        "tsconfig.json"                : "restClient/tsconfig.json.vm"
+        "interfaces.ts"                : "common/interfaces.ts.vm"
+    redux-client:
+        "package.json"                 : "reduxClient/package.json.vm"
+        "tsconfig.json"                : "reduxClient/tsconfig.json.vm"
+        "src/index.ts"                 : "reduxClient/src/index.ts.vm"
+        "src/restClient/main.ts"       : "restClient/main.ts.vm"
+        "src/restClient/interfaces.ts" : "common/interfaces.ts.vm"
+        "src/configureMiddlewares.ts"  : "reduxClient/src/configureMiddlewares.ts.vm"
+        "src/actions/common.ts"        : "reduxClient/src/actions/common.ts.vm"
+        "src/actions/api.ts"           : "reduxClient/src/actions/api.ts.vm"
+        "src/actions/index.ts"         : "reduxClient/src/actions/index.ts.vm"
+        "src/reducers/common.ts"       : "reduxClient/src/reducers/common.ts.vm"
+                

@@ -1,0 +1,180 @@
+// Webapi generator for mysql
+// DB: $name
+// VER: $version
+
+import * as mysql from 'mysql';
+import {Result,MySQLResult} from './interfaces';
+import * as I from './interfaces';
+import * as moment from 'moment';
+
+export interface ClientOptions {
+    host: string,
+    database: string,
+    user: string,
+    password: string
+}
+
+const sqlOper = {
+    "EQUAL":"= ? ",
+    "CONTAINS": "LIKE ? ",
+    "GT": "> ? ",
+    "GTE": ">= ? ",
+    "LT": "< ? ",
+    "LTE": "<= ? "
+}
+
+export class Client {
+    private pool: any;
+    constructor(options: ClientOptions) {
+        this.pool = mysql.createPool({
+            connectionLimit: 10,
+            multipleStatements: true,
+            host: options.host,
+            user: options.user,
+            password: options.password,
+            database: options.database
+        });
+    }
+
+
+    public execSQL = <T>(sql: string, args?:any[]) => {
+        return new Promise<Result<T>>((res, rej) => {
+            this.pool.getConnection((err, connection) => {
+                console.info( moment().format('YYYY-MM-DD HH:mm:ss'), sql,args||'');
+                connection.query(sql, args, (err, rows) => {
+                    if (err) {
+                        console.error('ERROR:', sql);
+                        console.error(JSON.stringify(err,null,4));
+                        console.error(JSON.stringify(args,null,4));
+                        rej(err)
+                    } else {
+                        res({
+                            data:rows as T,
+                            sql,
+                            args
+                        });
+                    }
+                    connection.release();
+                });
+            });
+        });
+    }
+    protected execSP= <T>(sql: string, args?:any[]) => {
+        return new Promise<Result<T>>((res, rej) => {
+            this.pool.getConnection((err, connection) => {
+                console.info( moment().format('YYYY-MM-DD HH:mm:ss'), sql,args||'');
+                connection.query(sql, args, (err, rows) => {
+                    if (err) {
+                        console.error('ERROR:', sql);
+                        console.error(JSON.stringify(err,null,4));
+                        console.error(JSON.stringify(args,null,4));
+                        rej(err)
+                    } else {
+                        res({
+                            data:rows[0] as T,
+                            sql,
+                            args
+                        });
+                    }
+                    connection.release();
+                });
+            });
+        });
+    }
+// API
+
+#foreach($table in $tables)
+ 
+ ${table.name}List = (filter?: I.${table.name}Filter): Promise<Result<I.${table.name}DTO[]>> => {
+    let sql ='select ${table.selectFields} from `${name}`.`${table.name}`';
+    #if ($table.join) 
+        #foreach($join in $table.join) 
+            sql += ' join `${name}`.${join.table} ${join.name} on ${join.clause} ' 
+        #end
+    #end
+    let args: any[] = [];
+    if ( filter ) { 
+        sql += ' where 1=1 '
+        #foreach($field in $table.columns) 
+            if (filter.${field.name}) {
+                sql += ' AND ${field.name} ' + sqlOper[filter.${field.name}Operator || 'EQUAL'];
+                args.push(filter.${field.name});
+            }
+        #end
+    }
+    #if ($table.sort) 
+        sql += ' order by $table.sort ';
+    #end
+    return this.execSQL<I.${table.name}DTO[]>(sql,args);
+ }
+
+ ${table.name}Get = (${table.keyName}: ${table.keyType}): Promise<Result<I.${table.name}DTO>> => {
+    let sql ='select ${table.selectFields} from `${name}`.`${table.name}`';
+    #if ($table.join) 
+        #foreach($join in $table.join) 
+            sql += ' join `${name}`.${join.table} ${join.name} on ${join.clause} ' 
+        #end
+    #end
+    sql += ' where ${table.name}.`${table.keyName}` = ?';
+    return this.execSQL<I.${table.name}DTO>(sql,[${table.keyName}])
+               .then(r=>{
+                    r.data = r.data[0];
+                    return r;
+               });
+ }
+
+${table.name}Insert = (parms: Partial<I.${table.name}DTO>): Promise<Result<I.${table.name}DTO>> => {
+    #foreach ($field in ${table.mandatoryFields}) 
+        if (!parms.${field}) return Promise.reject(`mandatory field ${field} is missing`);
+    #end
+
+    const keys = Object.keys(parms).filter(k=>{
+        return false 
+        #foreach($field in ${table.columns})
+            || k=="${field.name}" 
+        #end
+    });
+    const fields = keys.join(',');
+    const values = keys.map(k=>'?').join(',');
+
+    const sql =' insert into  `${name}`.${table.name} ('+fields+') values ('+values+')';
+    return this.execSQL<MySQLResult>(sql,keys.map(k=>parms[k])).then(r=>this.${table.name}Get (r.data.insertId));
+ }
+
+${table.name}Update = (${table.keyName}: ${table.keyType},parms: Partial<I.${table.name}DTO>): Promise<Result<I.${table.name}DTO>> => {
+    const keys = Object.keys(parms).filter(k=>{
+        return false 
+        #foreach($field in ${table.columns})
+            || k=="${field.name}" 
+        #end
+    });
+    const upd = keys.map(k=>k + '=?').join(',');
+    const sql =' update `${name}`.${table.name} set ' + upd +'  where  ${table.name}.`${table.keyName}` = ?';
+    return this.execSQL<MySQLResult>(sql,keys.map(k=>parms[k]).concat([${table.keyName}])).then(r=>this.${table.name}Get (${table.keyName}));
+ }
+
+${table.name}Delete = (${table.keyName}: ${table.keyType}): Promise<Result<MySQLResult>> => {
+    const sql =' delete from `${name}`.${table.name} where  ${table.name}.`${table.keyName}` = ?';
+   return this.execSQL<MySQLResult>(sql,[${table.keyName}]);
+ }
+#end
+
+
+#foreach($proc in $procedures)
+ ${proc.name} = (parms: I.${proc.name}Parms): Promise<I.${proc.name}ListResult> => {
+    let args = '';
+    #foreach($parm in ${proc.parameters})
+        #if( $foreach.count > 1 )
+            args += ",";
+        #end
+        #if($parm.type == 'string')
+            args += parms.$parm.name ? "'" +  parms.$parm.name + "'" : "NULL";
+        #else
+            args += parms.$parm.name ? parms.${parm.name}.toString() : "NULL";
+        #end 
+    #end        
+    return this.execSP<I.${proc.name}DTO[]>('call `${name}`.${proc.name}(' + args + ')');
+}
+#end
+}
+

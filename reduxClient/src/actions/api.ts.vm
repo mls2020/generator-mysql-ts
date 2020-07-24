@@ -1,0 +1,86 @@
+import { createAction,createPromiseAction,createPromiseWithThunkAction} from 'redux-helper';
+import { interfaces, RestClient } from '../restClient/main';
+import * as CK from 'js-cookie';
+
+export const proxy = new RestClient(process.env.REACT_APP_API_ROOT!);
+
+const wr = <P,T> (api: (args:P) => Promise<interfaces.Result<T>>) => {
+   return (args:P|undefined) => {
+       // args! is a workaround to make type work
+       return api(args!).then(res=>res.data);
+   }
+}
+
+
+#foreach($proc in $procedures)
+export const action_${proc.name}_success  = createAction<interfaces.${proc.name}DTO[]>('action_${proc.name}_success');
+export const action_${proc.name}  = createPromiseAction('action_${proc.name}',wr(proxy.action_${proc.name}),action_${proc.name}_success);
+#end
+
+#foreach($table in $tables)
+//Table $table.name
+export const ${table.name}List_success  = createAction<interfaces.${table.name}DTO[]>('${table.name}List_success');
+export const ${table.name}List  = createPromiseAction('${table.name}List',wr(proxy.${table.name}List),${table.name}List_success);
+
+export const ${table.name}Get_success  = createAction<interfaces.${table.name}DTO>('${table.name}Get_success');
+export const ${table.name}Get  = createPromiseAction('${table.name}Get',wr(proxy.${table.name}Get),${table.name}Get_success);
+
+export const ${table.name}Insert_success  = createAction<Partial<interfaces.${table.name}DTO>>('${table.name}Insert_success');
+export const ${table.name}Insert  = createPromiseAction('${table.name}Insert',wr(proxy.${table.name}Insert),${table.name}Insert_success);
+
+export const ${table.name}Update_success  = createAction<Partial<interfaces.${table.name}DTO>>('${table.name}Update_success');
+export const ${table.name}Update  = createPromiseAction('${table.name}Update',wr(proxy.${table.name}Update),${table.name}Update_success);
+
+export const ${table.name}Delete_success  = createAction<interfaces.MySQLResult>('${table.name}Delete_success');
+export const ${table.name}Delete  = createPromiseAction('${table.name}Delete',wr(proxy.${table.name}Delete),${table.name}Delete_success);
+
+#end
+
+export const configUserSuccess  = createAction<interfaces.MySQLResult >('configUserSuccess');
+export const configUser  = createPromiseAction('configUser',wr(proxy.configUser),configUserSuccess);
+
+export const loginSuccess = createAction<interfaces.LoginInfo>('LOGIN_SUCCESS');
+export const loginFailure = createAction<void>('LOGIN_FAILURE');
+export const logout = createAction<void>('LOGOUT');
+
+const _login = (p: { user: string, password: string, succPath:string }) => proxy.login(p).catch(r => undefined);
+const _loginSSO= (p: { email:string, token:string, succPath:string }) => proxy.loginSSO(p).catch(r => undefined);
+
+export const login = (afterLoginSuccess:(dispatch:any)=>void) => createPromiseWithThunkAction('LOGIN', _login, (d, g, r, p) => {
+    if (r) {
+        d(loginSuccess(r));
+        if (p) {
+            CK.set('pas-v9-user', p.user, { expires: 30 });
+            CK.set('pas-v9-pwd', p.password, { expires: 30 });
+        }
+        afterLoginSuccess(d);
+    } else {
+        d(loginFailure());
+        CK.remove('pas-v9-user');
+        CK.remove('pas-v9-pwd');
+    }
+});
+export const loginSSO = (afterLoginSuccess:(dispatch:any)=>void) => createPromiseWithThunkAction('LOGIN_SSO', _loginSSO, (d, g, r, p) => {
+    if (r) {
+        d(loginSuccess(r));
+        if (p) {
+            CK.set('pas-v9-user-email', p.email, { expires: 30 });
+            CK.set('pas-v9-token', r.token, { expires: 30 });
+        }
+        afterLoginSuccess(d);
+    } else {
+        d(loginFailure());
+        CK.remove('pas-v9-user-email');
+        CK.remove('pas-v9-token');
+    }
+});
+
+export const getcookie = () => {
+    return {
+        user: CK.get('pas-v9-user') || '',
+        pwd: CK.get('pas-v9-pwd') || '',
+        email: CK.get('pas-v9-user-email') || '',
+        token: CK.get('pas-v9-token') || '',
+
+    };
+};
