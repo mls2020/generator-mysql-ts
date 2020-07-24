@@ -1,7 +1,6 @@
 import middlewares from './configureMiddlewares';
 import * as restClient from './restClient/main';
 import * as actions from './actions';
-import * as commonReducer from './reducers/common';
 import * as interfaces from './restClient/interfaces';
 
 
@@ -9,6 +8,5 @@ export {
     interfaces,
     restClient,
     actions,
-    commonReducer,
     middlewares
 }
