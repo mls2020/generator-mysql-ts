@@ -125,7 +125,7 @@ export class Client {
 
 ${table.name}Insert = (parms: Partial<I.${table.name}DTO>): Promise<Result<I.${table.name}DTO>> => {
     #foreach ($field in ${table.mandatoryFields}) 
-        if (!parms.${field}) return Promise.reject(`mandatory field ${field} is missing`);
+        if (parms.${field}===undefined) return Promise.reject(`mandatory field ${field} is missing`);
     #end
 
     const keys = Object.keys(parms).filter(k=>{
