@@ -1,6 +1,5 @@
-import { createAction,createPromiseAction,createPromiseWithThunkAction} from 'redux-helper';
+import { createAction,createPromiseAction} from 'redux-helper';
 import { interfaces, RestClient } from '../restClient/main';
-import * as CK from 'js-cookie';
 
 export const proxy = new RestClient(process.env.REACT_APP_API_ROOT!);
 
