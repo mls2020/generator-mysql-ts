@@ -11,7 +11,8 @@ export interface ClientOptions {
     host: string,
     database: string,
     user: string,
-    password: string
+    password: string,
+    charset?: string,
 }
 
 const sqlOper = {
@@ -32,7 +33,8 @@ export class Client {
             host: options.host,
             user: options.user,
             password: options.password,
-            database: options.database
+            database: options.database,
+            charset: options.charset
         });
     }
 
@@ -97,7 +99,7 @@ export class Client {
         sql += ' where 1=1 '
         #foreach($field in $table.columns) 
             if (filter.${field.name}) {
-                sql += ' AND ${field.name} ' + sqlOper[filter.${field.name}Operator || 'EQUAL'];
+                sql += ' AND `${field.name}` ' + sqlOper[filter.${field.name}Operator || 'EQUAL'];
                 args.push(filter.${field.name});
             }
         #end
@@ -134,7 +136,7 @@ ${table.name}Insert = (parms: Partial<I.${table.name}DTO>): Promise<Result<I.${t
             || k=="${field.name}" 
         #end
     });
-    const fields = keys.join(',');
+    const fields = keys.map(k => '`' + k + '`').join(',');
     const values = keys.map(k=>'?').join(',');
 
     const sql =' insert into  `${name}`.${table.name} ('+fields+') values ('+values+')';
@@ -148,7 +150,7 @@ ${table.name}Update = (${table.keyName}: ${table.keyType},parms: Partial<I.${tab
             || k=="${field.name}" 
         #end
     });
-    const upd = keys.map(k=>k + '=?').join(',');
+    const upd = keys.map(k => '`' + k + '`' + '=?').join(',');
     const sql =' update `${name}`.${table.name} set ' + upd +'  where  ${table.name}.`${table.keyName}` = ?';
     return this.execSQL<MySQLResult>(sql,keys.map(k=>parms[k]).concat([${table.keyName}])).then(r=>this.${table.name}Get (${table.keyName}));
  }
