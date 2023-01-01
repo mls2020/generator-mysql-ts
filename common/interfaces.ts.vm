@@ -68,7 +68,7 @@ export type ${proc.name}ListResult = Result<${proc.name}DTO[]>
 export interface MySQLResult {
     "fieldCount": number,
     "affectedRows": number,
-    "insertId": number,
+    "insertId": any, // TODO: FIX GENERATOR TO PROPERLY USE THE TYPE OF INSERT ID
     "serverStatus": number,
     "warningCount": number,
     "message": string,
