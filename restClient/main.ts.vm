@@ -29,8 +29,11 @@ export class RestClient {
                     'token': this.token
                 } as any
             }).then(res => {
-                if (res.status >= 300) {
-                    return res.json().then(reject);
+                if (!res.ok) {
+                    reject({
+                        status: res.status,
+                        statusText: res.statusText,
+                    })
                 } else {
                     return res.json().then(resolve);
                 }
