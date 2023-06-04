@@ -54,11 +54,17 @@ export class RestClient {
         });
     }
 
-    public preformGet<T>(url:string, qs:any) {
+    public performGet<T>(url:string, qs:any) {
         return this.fetch<T>('GET',url,qs,undefined);
     }
     public performPost<T>(url:string, data:any) {
         return this.fetch<T>('POST',url, undefined,data);
+    }
+    public performPut<T>(url:string, data:any) {
+        return this.fetch<T>('PUT',url, undefined,data);
+    }
+    public performDelete<T>(url:string, qs:any) {
+        return this.fetch<T>('DELETE',url, qs, undefined);
     }
 
     public setToken = (token:string) => this.token=token;
