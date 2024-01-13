@@ -1,9 +1,8 @@
 // ${name} v${version}
 // tslint:disable
 
-
+import axios, { AxiosInstance } from 'axios';
 import * as I from './interfaces';
-import 'isomorphic-fetch';
 export {I as interfaces};
 
 let query = (params:any)=> Object.keys(params)
@@ -13,45 +12,33 @@ let query = (params:any)=> Object.keys(params)
 export class RestClient {
     private rootUrl:string;
     private token:string = '';
-    constructor(rootUrl:string) {
+    private _axios: AxiosInstance;
+
+    constructor(rootUrl:string,timeout=10000) {
         this.rootUrl = rootUrl || '';
+        this._axios = axios.create({
+            baseURL: rootUrl || '',
+            timeout,
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json',
+            }
+        })
     }
 
-    private fetch<T>(verb:'GET'|'PUT'|'POST'|'DELETE',url: string, qs: any | undefined, body: any| undefined) {
-        return new Promise<T>((resolve, reject) => {
-            const queryString = qs ? query(qs) : ''
-            return fetch(this.rootUrl + '/api/v${major}' + url + '?' + queryString, {
-                method: verb,
-                body: body && JSON.stringify(body),
-                headers: {
-                    'Accept': 'application/json',
-                    'Content-Type': 'application/json',
-                    'token': this.token
-                } as any
-            }).then(res => {
-                if (!res.ok) {
+    private fetch<T>(verb: 'GET' | 'PUT' | 'POST' | 'DELETE', url: string, qs: any | undefined, body: any | undefined) {
+        const queryString = qs ? query(qs) : ''
+        return this._axios({
+            url: '/api/v1' + url + '?' + queryString,
+            method: verb,
+            data: body,
+            headers: {
+                'token': this.token
+            }
+        }).then(r => {
+            return r.data as T
+        })
 
-                    //TRY JSON
-                    res.text()
-                        .then(txt => {
-                            // console.log('txt',{ txt });
-                            try {
-                                const j = JSON.parse(txt)
-                                reject(new Error(j.sqlMessage || res.statusText, { cause: res.status }))
-                            } catch (error) {
-                                reject(new Error(res.statusText, { cause: res.status }))
-
-                            }
-                        })
-                } else {
-                    return res.json().then(resolve);
-                }
-            }).catch(err => {
-                // console.log('err',{ err });
-
-                reject(err);
-            });
-        });
     }
 
     public performGet<T>(url:string, qs:any) {
